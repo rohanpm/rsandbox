@@ -1,0 +1,200 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
+#include <errno.h>
+#include <string.h>
+
+#include "shared.h"
+
+struct Global global = {
+  .debug_mode = 0
+};
+
+#define OPTION_NOT  (1<<16)
+static const char optionstring[] = "+hd";
+
+#define OPTION_BOOL(longopt, value) \
+  { .name = longopt, .val = value }, \
+  { .name = "no-" longopt, .val = value|OPTION_NOT }
+
+static const struct option options[] = {
+  { .name = "help", .val = 'h' },
+  { .name = "debug", .val = 'd' },
+  { .name = "none", .val = 'N' },
+  OPTION_BOOL("net", 'n'),
+  OPTION_BOOL("pid", 'p'),
+  OPTION_BOOL("ipc", 'i'),
+  OPTION_BOOL("mount", 'm'),
+  OPTION_BOOL("fs", 'f'),
+  { 0, 0, 0, 0 }
+};
+
+void usage(FILE* stream, int exitcode)
+{
+  fprintf(stream,
+"Usage: sandbox [options] [--] command [args]\n\n"
+"Run a command in a sandbox.\n\n"
+"Options:\n"
+"  --help, -h        Show this message\n"
+"  --debug, -d       Enable debugging messages\n"
+"\n"
+"Sandbox features:\n"
+"  All of the following sandbox features are enabled by default.\n"
+"  `--no-<feature>' disables a feature.\n"
+"\n"
+"  --none\n"
+"        Disable all sandbox features.\n"
+"        May be followed by additional options to turn on selected features.\n"
+"\n"
+"  --net, --no-net\n"
+"        Network isolation; prevents connections to any host (including\n"
+"        localhost).\n"
+"\n"
+"  --pid, --no-pid\n"
+"        PID isolation; prevents sending signals to any process outside of\n"
+"        the sandbox.\n"
+"\n"
+"  --mount, --no-mount\n"
+"        Mount isolation; prevents mounting or unmounting any mounts outside\n"
+"        of the sandbox.\n"
+"\n"
+"  --ipc, --no-ipc\n"
+"        IPC isolation; prevents access to any SysV IPC resources outside of\n"
+"        the sandbox.\n"
+"\n"
+"  --fs, --no-fs\n"
+"        Filesystem isolation; prevents modification of files outside of the\n"
+"        sandbox.\n"
+	  );
+  exit(exitcode);
+}
+
+void parse_arguments(struct Context* ctx, int argc, char** argv)
+{
+  int gotopt;
+  while (gotopt = getopt_long(argc, argv, optionstring, options, 0)) {
+    if (gotopt == -1) {
+      break;
+    }
+    
+    debug("gotopt 0x%x\n", gotopt);
+
+    int enable = !(gotopt&OPTION_NOT);
+
+    gotopt &= 0xffff;
+
+    switch (gotopt) {
+
+    case 'h':
+      usage(stdout, 0);
+
+    case '?':
+      usage(stderr, 3);
+
+    case 'd':
+      ++global.debug_mode;
+      break;
+
+    case 'N':
+      ctx->netns = 0;
+      ctx->pidns = 0;
+      ctx->mountns = 0;
+      ctx->ipcns = 0;
+      ctx->fs = 0;
+      break;
+
+    case 'n':
+      ctx->netns = enable;
+      break;
+
+    case 'p':
+      ctx->pidns = enable;
+      break;
+
+    case 'i':
+      ctx->ipcns = enable;
+      break;
+
+    case 'm':
+      ctx->mountns = enable;
+      break;
+
+    case 'f':
+      ctx->fs = enable;
+      break;
+    }
+  }
+
+  debug("optind %d\n", optind);
+
+  ctx->child_argv = &argv[optind];
+  if (!ctx->child_argv[0]) {
+    fprintf(stderr, "Not enough arguments\n");
+    usage(stderr, 3);
+  }
+
+  if (ctx->fs && !ctx->mountns) {
+    fprintf(stderr, "error: filesystem sandbox requires mount sandbox.\n"
+	    "Try adding --mount to the sandbox arguments.\n");
+    exit(3);
+  }
+
+  ctx->mount_proc = ctx->mountns && ctx->pidns;
+
+  /*
+    If using fuse and pidns, create a pid namespace and mount namespace
+    for the fuse layer only; this ensures the sandbox fuse process won't
+    be visible within the sandbox, and killing the top-level sandbox
+    process is guaranteed to kill the fuse process.
+  */
+  ctx->clone_for_fuse = ctx->fs && ctx->pidns;
+}
+
+static char* mountpoint = 0;
+void remove_mountpoint()
+{
+  if (rmdir(mountpoint)) {
+    if (errno != ENOENT) {
+      fprintf(stderr, "warning: could not remove sandbox fuse mount point %s: "
+	      "%s\n", mountpoint, strerror(errno));
+    }
+  }
+}
+
+void setup_fuse_context(struct Context* ctx)
+{
+  const char* tempdir = getenv("TMPDIR");
+  if (!tempdir) {
+    tempdir = "/tmp";
+  }
+  ctx->fuse_writable_paths[0] = tempdir;
+  ctx->fuse_writable_paths[1] = getcwd(0, 0);
+
+  if (-1 == asprintf(&ctx->fuse_mountpoint, "%s/sandbox-fuse-XXXXXX", tempdir)) {
+    perror("asprintf");
+    exit(2);
+  }
+
+  if (!mkdtemp(ctx->fuse_mountpoint)) {
+    perror("Can't create mount point for FUSE");
+    exit(3);
+  }
+  mountpoint = ctx->fuse_mountpoint;
+  atexit(remove_mountpoint);
+}
+
+int main(int argc, char** argv)
+{
+  struct Context ctx = {
+    .netns = 1,
+    .pidns = 1,
+    .mountns = 1,
+    .ipcns = 1,
+    .fs = 1
+  };
+  parse_arguments(&ctx, argc, argv);
+  if (ctx.fs) {
+    setup_fuse_context(&ctx);
+  }
+  return run(&ctx);
+}
