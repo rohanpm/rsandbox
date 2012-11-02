@@ -53,7 +53,7 @@ void usage(FILE* stream, int exitcode)
 "\n"
 "  --net, --no-net\n"
 "        Network isolation; prevents connections to any host (including\n"
-"        localhost).\n"
+"        localhost). This includes Unix domain socket connections.\n"
 "\n"
 "  --pid, --no-pid\n"
 "        PID isolation; prevents sending signals to any process outside of\n"
