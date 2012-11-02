@@ -25,3 +25,6 @@ clean:
 
 distclean: clean
 	rm -f $(TARGET)
+
+dist:
+	git archive --prefix=sandbox-$$(<VERSION)/ -o sandbox-$$(<VERSION).tar.gz HEAD
