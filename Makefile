@@ -6,10 +6,12 @@ TARGET=sandbox
 
 VERSION=$(shell cat $(SRCDIR)/VERSION)
 
-BASE_CXXFLAGS=`pkg-config --cflags fuse` -g -std=c++11
+FUSE_CXXFLAGS=$(shell pkg-config --cflags fuse)
+BASE_CXXFLAGS=$(FUSE_CXXFLAGS) -g -std=c++11
 override CXXFLAGS:=$(BASE_CXXFLAGS) $(CXXFLAGS)
 
-BASE_LDFLAGS=`pkg-config --libs fuse`
+FUSE_LDFLAGS=$(shell pkg-config --libs fuse)
+BASE_LDFLAGS=$(FUSE_LDFLAGS)
 override LDFLAGS:=$(BASE_LDFLAGS) $(LDFLAGS)
 
 $(TARGET): $(OBJECTS)
