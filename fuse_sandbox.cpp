@@ -1,5 +1,4 @@
 #define FUSE_USE_VERSION 26
-#define _GNU_SOURCE
 #define _BSD_SOURCE
 #define _XOPEN_SOURCE 500
 
@@ -19,76 +18,27 @@
 #include <unistd.h>
 #include <sys/xattr.h>
 
+#include <list>
+
 #include "shared.h"
 #include "fuse_sandbox.h"
+#include "path.h"
 
-/* a path decomposed */
-struct Path {
-  char* path;
-  char* dirname;
-  char* basename;
-  int len;
-};
-
-static struct Path mountpoint = {};
-static struct Path writable_paths[8] = {};
-
-/* strdup or die */
-char* xstrdup(const char* in)
-{
-  char* out = strdup(in);
-  if (!out) {
-    perror("malloc");
-    exit(127);
-  }
-  return out;
-}
-
-/* allocating dirname() */
-char* adirname(const char* path)
-{
-  char* in = xstrdup(path);
-  char* out = xstrdup(dirname(in));
-  free(in);
-  return out;
-}
-
-/* allocating basename() */
-char* abasename(const char* path)
-{
-  char* in = xstrdup(path);
-  char* out = xstrdup(basename(in));
-  free(in);
-  return out;
-} 
-
-void path_init(struct Path* out, const char* path)
-{
-  out->path = xstrdup(path);
-  out->len = strlen(path);
-  out->basename = abasename(path);
-  out->dirname = adirname(path);
-}
-
-void path_destroy(struct Path* p)
-{
-  free(p->path);
-  free(p->basename);
-  free(p->dirname);
-}
+static Path mountpoint;
+static std::list<Path> writable_paths;
 
 /* returns 1 if path should be hidden in the sandbox */
 int should_hide(const char* path)
 {
-  return (0 == strncmp(path, mountpoint.path, mountpoint.len));
+  return (0 == strncmp(path, mountpoint.path().c_str(), mountpoint.length()));
 }
 
 /* returns 1 if write access under the given path should not be blocked */
 int permit_write(const char* path)
 {
-  for (struct Path* tree = writable_paths; tree->path; ++tree) {
-    if (0 == strncmp(path, tree->path, tree->len)
-	&& strlen(path) > tree->len) {
+  for (Path tree : writable_paths) {
+    if (0 == strncmp(path, tree.path().c_str(), tree.length())
+	&& strlen(path) > tree.length()) {
       return 1;
     }
   }
@@ -277,6 +227,8 @@ int sandbox_write(const char* path, const char* buf, size_t size,
   if (-1 == closed) {
     return -errno;
   }
+#else
+  (void)closed;
 #endif
 
   return wrote;
@@ -304,15 +256,14 @@ int sandbox_readdir(const char* path, void* buf, fuse_fill_dir_t filler,
     return -errno;
   }
 
-  int hide_mountpoint = (0 == strcmp(path, mountpoint.dirname));
+  int hide_mountpoint = (mountpoint.dirname() == path);
   struct dirent* ent;
 
-  while (ent = readdir(dir)) {
-    if (hide_mountpoint && 0 == strcmp(ent->d_name, mountpoint.basename)) {
+  while ((ent = readdir(dir))) {
+    if (hide_mountpoint && mountpoint.basename() == ent->d_name) {
       continue;
     }
-    struct stat st;
-    memset(&st, 0, sizeof(st));
+    struct stat st{};
     st.st_ino = ent->d_ino;
     st.st_mode = ent->d_type << 12;
     if (filler(buf, ent->d_name, &st, 0))
@@ -378,34 +329,6 @@ void* sandbox_init(struct fuse_conn_info* conn)
   return 0;
 }
 
-const struct fuse_operations oper = {
-  .getattr = sandbox_getattr,
-  .readlink = sandbox_readlink,
-  .mknod = sandbox_mknod,
-  .mkdir = sandbox_mkdir,
-  .rmdir = sandbox_rmdir,
-  .symlink = sandbox_symlink,
-  .rename = sandbox_rename,
-  .link = sandbox_link,
-  .chmod = sandbox_chmod,
-  .chown = sandbox_chown,
-  .truncate = sandbox_truncate,
-  .open = sandbox_open,
-  .read = sandbox_read,
-  .write = sandbox_write,
-  .unlink = sandbox_unlink,
-  .opendir = sandbox_opendir,
-  .readdir = sandbox_readdir,
-  .access = sandbox_access,
-  .statfs = sandbox_statfs,
-  .getxattr = sandbox_getxattr,
-  .setxattr = sandbox_setxattr,
-  .listxattr = sandbox_listxattr,
-  .removexattr = sandbox_removexattr,
-  .utimens = sandbox_utimens,
-  .init = sandbox_init
-};
-
 int start_fuse_sandbox(const struct Context* ctx)
 {
   int statusfd[2];
@@ -444,20 +367,49 @@ int start_fuse_sandbox(const struct Context* ctx)
 
   prctl(PR_SET_NAME, "sandbox [fuse]");
 
-  path_init(&mountpoint, ctx->fuse_mountpoint);
-  for (int i = 0; ctx->fuse_writable_paths[i]; ++i) {
-    assert(i < sizeof(writable_paths)/sizeof(writable_paths[0]));
-    path_init(&writable_paths[i], ctx->fuse_writable_paths[i]);
-    debug("fs: path %s is writable\n", ctx->fuse_writable_paths[i]);
+  mountpoint.set(ctx->fuse_mountpoint);
+
+  for (unsigned i = 0; ctx->fuse_writable_paths[i]; ++i) {
+    Path p{ctx->fuse_writable_paths[i]};
+    writable_paths.push_back(p);
+    debug("fs: path (%s,%s) is writable\n", p.dirname().c_str(), p.basename().c_str());
   }
 
-  char* argv[] = {
+  const char* argv[] = {
     "sandbox",
-    mountpoint.path,
+    ctx->fuse_mountpoint,
     "-o", "direct_io",
     global.debug_mode > 1 ? "-d" : "-f",
     0
   };
   int argc = sizeof(argv)/sizeof(argv[0]) - 1;
-  exit(fuse_main(argc, argv, &oper, &statusfd[1]));
+
+  struct fuse_operations oper{};
+  oper.access = sandbox_access;
+  oper.chmod = sandbox_chmod;
+  oper.chown = sandbox_chown;
+  oper.getattr = sandbox_getattr;
+  oper.getxattr = sandbox_getxattr;
+  oper.init = sandbox_init;
+  oper.link = sandbox_link;
+  oper.listxattr = sandbox_listxattr;
+  oper.mkdir = sandbox_mkdir;
+  oper.mknod = sandbox_mknod;
+  oper.open = sandbox_open;
+  oper.opendir = sandbox_opendir;
+  oper.read = sandbox_read;
+  oper.readdir = sandbox_readdir;
+  oper.readlink = sandbox_readlink;
+  oper.removexattr = sandbox_removexattr;
+  oper.rename = sandbox_rename;
+  oper.rmdir = sandbox_rmdir;
+  oper.setxattr = sandbox_setxattr;
+  oper.statfs = sandbox_statfs;
+  oper.symlink = sandbox_symlink;
+  oper.truncate = sandbox_truncate;
+  oper.unlink = sandbox_unlink;
+  oper.utimens = sandbox_utimens;
+  oper.write = sandbox_write;
+
+  exit(fuse_main(argc, (char**)argv, &oper, &statusfd[1]));
 }

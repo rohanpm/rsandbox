@@ -1,15 +1,20 @@
-OBJECTS=main.o run.o shared.o fuse_sandbox.o
+OBJECTS=main.o run.o shared.o fuse_sandbox.o path.o
 TARGET=sandbox
-CFLAGS:=`pkg-config --cflags fuse` -std=c99 $(CFLAGS)
-LDFLAGS:=`pkg-config --libs fuse` $(LDFLAGS)
+
+BASE_CXXFLAGS=`pkg-config --cflags fuse` -g -std=c++11
+override CXXFLAGS:=$(BASE_CXXFLAGS) $(CXXFLAGS)
+
+BASE_LDFLAGS=`pkg-config --libs fuse`
+override LDFLAGS:=$(BASE_LDFLAGS) $(LDFLAGS)
 
 $(TARGET): $(OBJECTS)
-	$(CC) -o$(TARGET) $(LDFLAGS) $(OBJECTS) $(LOADLIBES) $(LDLIBS)
+	$(CXX) -o$(TARGET) $(LDFLAGS) $(OBJECTS) $(LOADLIBES) $(LDLIBS)
 
-main.o: main.c shared.h
-run.o: run.c run.h shared.h
-shared.o: shared.c shared.h
-fuse_sandbox.o: fuse_sandbox.h fuse_sandbox.c
+main.o: main.cpp shared.h
+run.o: run.cpp run.h shared.h
+shared.o: shared.cpp shared.h
+fuse_sandbox.o: fuse_sandbox.cpp fuse_sandbox.h path.h
+path.o: path.cpp path.h
 
 setcaps: $(TARGET)
 	@echo Root password is required to set capabilities

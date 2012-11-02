@@ -1,14 +1,63 @@
 #include "run.h"
+#include "fuse_sandbox.h"
 
-#define _GNU_SOURCE
+#include <list>
+#include <string>
+#include <utility>
+
 #include <sched.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sys/wait.h>
+#include <sys/mount.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <mntent.h>
+#include <unistd.h>
 
 int run_children(void*);
+
+/* remount all mounted filesystems of the given type */
+int remount(const char* type)
+{
+  debug("attempting to remount filesystems of type %s\n", type);
+
+  FILE* file = setmntent("/proc/mounts", "r");
+  if (!file) {
+    perror("setmntent /proc/mounts");
+    return -1;
+  }
+
+  struct mntent* ent = getmntent(file);
+  if (!ent) {
+    perror("getmntent");
+    return -1;
+  }
+  debug("entering loop\n");
+
+  std::list<std::string> to_mount;
+
+  while (ent) {
+    debug("looking at filesystem %s %s\n", ent->mnt_dir, ent->mnt_type);
+    if (0 == strcmp(ent->mnt_type, type)) {
+      debug("remount %s (%s) ...\n", ent->mnt_dir, type);
+      to_mount.push_back(ent->mnt_dir);
+    }
+    ent = getmntent(file);
+  }
+  endmntent(file);
+
+  for (auto mountpoint : to_mount) {
+    if (mount(0, mountpoint.c_str(), type, 0, 0)) {
+      fprintf(stderr, "remount %s: %s\n", mountpoint.c_str(), strerror(errno));
+      return -1;
+    }
+  }
+
+  return 0;
+}
 
 int exec_child(void* arg)
 {
@@ -17,7 +66,7 @@ int exec_child(void* arg)
   /* FIXME: don't hardcode the proc and devtmpfs stuff */
   if (ctx->fs) {
     char cwd[1024];
-    if (!getcwd(&cwd, sizeof(cwd))) {
+    if (!getcwd(cwd, sizeof(cwd))) {
       perror("getcwd");
       return 255;
     }
@@ -28,16 +77,14 @@ int exec_child(void* arg)
     if (chdir(cwd)) {
       perror("chdir");
     }
-    if (mount(0, "/dev", "devtmpfs", 0, 0)) {
-      perror("mount /dev");
+    if (remount("devtmpfs")) {
       return 255;
     }
   }
 
   if (ctx->mount_proc) {
     debug("mounting /proc\n");
-    if (mount(0, "/proc", "proc", 0, 0)) {
-      perror("mount /proc");
+    if (remount("proc")) {
       return 255;
     }
   }
@@ -178,7 +225,7 @@ int run_children(void* arg)
     perror("waitpid");
   }
 
-  debug("waited: %d\n", waited);
+  debug("waited: %d, status: 0x%x\n", waited, status);
 
   int fuse_status = 0;
   if (fuse_pid) {

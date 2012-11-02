@@ -1,10 +1,14 @@
+#include <string>
+
+#include <errno.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
-#include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "shared.h"
+#include "run.h"
 
 struct Global global = {
   .debug_mode = 0
@@ -14,13 +18,13 @@ struct Global global = {
 static const char optionstring[] = "+hd";
 
 #define OPTION_BOOL(longopt, value) \
-  { .name = longopt, .val = value }, \
-  { .name = "no-" longopt, .val = value|OPTION_NOT }
+  { longopt, 0, 0, value }, \
+  { "no-" longopt, 0, 0, value|OPTION_NOT }
 
 static const struct option options[] = {
-  { .name = "help", .val = 'h' },
-  { .name = "debug", .val = 'd' },
-  { .name = "none", .val = 'N' },
+  { "help", 0, 0, 'h' },
+  { "debug", 0, 0, 'd' },
+  { "none", 0, 0, 'N' },
   OPTION_BOOL("net", 'n'),
   OPTION_BOOL("pid", 'p'),
   OPTION_BOOL("ipc", 'i'),
@@ -72,7 +76,8 @@ void usage(FILE* stream, int exitcode)
 void parse_arguments(struct Context* ctx, int argc, char** argv)
 {
   int gotopt;
-  while (gotopt = getopt_long(argc, argv, optionstring, options, 0)) {
+  while ((gotopt = getopt_long(argc, argv,
+			       optionstring, options, 0))) {
     if (gotopt == -1) {
       break;
     }
@@ -170,16 +175,16 @@ void setup_fuse_context(struct Context* ctx)
   ctx->fuse_writable_paths[0] = tempdir;
   ctx->fuse_writable_paths[1] = getcwd(0, 0);
 
-  if (-1 == asprintf(&ctx->fuse_mountpoint, "%s/sandbox-fuse-XXXXXX", tempdir)) {
-    perror("asprintf");
-    exit(2);
-  }
+  std::string tmpl(tempdir);
+  tmpl += "/sandbox-fuse-XXXXXX";
+  char* c_mountpoint = strdup(tmpl.c_str());
 
-  if (!mkdtemp(ctx->fuse_mountpoint)) {
+  if (!mkdtemp(c_mountpoint)) {
     perror("Can't create mount point for FUSE");
     exit(3);
   }
-  mountpoint = ctx->fuse_mountpoint;
+  ctx->fuse_mountpoint = c_mountpoint;
+  mountpoint = c_mountpoint;
   atexit(remove_mountpoint);
 }
 
