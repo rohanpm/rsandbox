@@ -1,6 +1,9 @@
 #ifndef SANDBOX_SHARED_H
 #define SANDBOX_SHARED_H
 
+#include <string>
+#include <list>
+
 struct Global {
   int debug_mode;
 };
@@ -15,8 +18,8 @@ struct Context {
   unsigned mount_proc :1;
   unsigned clone_for_fuse :1;
   char** child_argv;
-  const char* fuse_mountpoint;
-  const char* fuse_writable_paths[8];
+  std::string fuse_mountpoint;
+  std::list<std::string> fuse_writable_paths;
 };
 
 void debug(const char*, ...);

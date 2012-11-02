@@ -369,15 +369,15 @@ int start_fuse_sandbox(const struct Context* ctx)
 
   mountpoint.set(ctx->fuse_mountpoint);
 
-  for (unsigned i = 0; ctx->fuse_writable_paths[i]; ++i) {
-    Path p{ctx->fuse_writable_paths[i]};
+  for (std::string path : ctx->fuse_writable_paths) {
+    Path p{path};
     writable_paths.push_back(p);
     debug("fs: path (%s,%s) is writable\n", p.dirname().c_str(), p.basename().c_str());
   }
 
   const char* argv[] = {
     "sandbox",
-    ctx->fuse_mountpoint,
+    ctx->fuse_mountpoint.c_str(),
     "-o", "direct_io",
     global.debug_mode > 1 ? "-d" : "-f",
     0

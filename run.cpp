@@ -70,7 +70,7 @@ int exec_child(void* arg)
       perror("getcwd");
       return 255;
     }
-    if (chroot(ctx->fuse_mountpoint)) {
+    if (chroot(ctx->fuse_mountpoint.c_str())) {
       perror("chroot");
       return 255;
     }

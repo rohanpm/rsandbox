@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
+#include <stdlib.h>
+
 
 #include "shared.h"
 #include "run.h"
@@ -15,6 +18,7 @@ struct Global global = {
 };
 
 #define OPTION_NOT  (1<<16)
+#define OPTION_FS_ALLOW 0x101
 static const char optionstring[] = "+hd";
 
 #define OPTION_BOOL(longopt, value) \
@@ -25,6 +29,7 @@ static const struct option options[] = {
   { "help", 0, 0, 'h' },
   { "debug", 0, 0, 'd' },
   { "none", 0, 0, 'N' },
+  { "fs-allow", 1, 0, OPTION_FS_ALLOW },
   OPTION_BOOL("net", 'n'),
   OPTION_BOOL("pid", 'p'),
   OPTION_BOOL("ipc", 'i'),
@@ -69,8 +74,49 @@ void usage(FILE* stream, int exitcode)
 "  --fs, --no-fs\n"
 "        Filesystem isolation; prevents modification of files outside of the\n"
 "        sandbox.\n"
+"\n"
+"Filesystem options:\n"
+"\n"
+"  --fs-allow <PATH> [ --fs-allow <PATH2> ... ]\n"
+"        Allow writes to the specified path(s).\n"
+"        <PATH> may contain a single relative or absolute path, or\n"
+"        several paths separated with the : character.\n"
 	  );
   exit(exitcode);
+}
+
+std::string realpath(std::string const& path)
+{
+  char* resolved = realpath(path.c_str(), 0);
+  if (!resolved) {
+    fprintf(stderr, "Could not resolve %s: %s\n", path.c_str(),
+	    strerror(errno));
+    exit(4);
+  }
+  std::string out{resolved};
+  free(resolved);
+  return out;
+}
+
+void parse_fs_allow(Context* ctx, const char* arg)
+{
+  int backslash = 0;
+  std::string current_arg;
+  while (*arg) {
+    if (backslash) {
+      current_arg.append(1, *arg);
+      backslash = 0;
+    } else if (*arg == '\\') {
+      backslash = 1;
+    } else if (*arg == ':') {
+      ctx->fuse_writable_paths.push_back(realpath(current_arg));
+      current_arg.clear();
+    } else {
+      current_arg.append(1, *arg);
+    }
+    ++arg;
+  }
+  ctx->fuse_writable_paths.push_back(realpath(current_arg));
 }
 
 void parse_arguments(struct Context* ctx, int argc, char** argv)
@@ -127,6 +173,10 @@ void parse_arguments(struct Context* ctx, int argc, char** argv)
     case 'f':
       ctx->fs = enable;
       break;
+
+    case OPTION_FS_ALLOW:
+      parse_fs_allow(ctx, optarg);
+      break;
     }
   }
 
@@ -172,8 +222,6 @@ void setup_fuse_context(struct Context* ctx)
   if (!tempdir) {
     tempdir = "/tmp";
   }
-  ctx->fuse_writable_paths[0] = tempdir;
-  ctx->fuse_writable_paths[1] = getcwd(0, 0);
 
   std::string tmpl(tempdir);
   tmpl += "/sandbox-fuse-XXXXXX";
