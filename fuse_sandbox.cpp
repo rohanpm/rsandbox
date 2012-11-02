@@ -37,8 +37,8 @@ int should_hide(const char* path)
 int permit_write(const char* path)
 {
   for (Path tree : writable_paths) {
-    if (0 == strncmp(path, tree.path().c_str(), tree.length())
-	&& strlen(path) > tree.length()) {
+    if (0 == strncmp(path, (tree.path()+"/").c_str(), tree.length()+1)
+	&& strlen(path) > tree.length()+1) {
       return 1;
     }
   }
