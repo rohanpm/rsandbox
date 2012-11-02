@@ -8,10 +8,10 @@
   distribute, sublicense, and/or sell copies of the Software, and to
   permit persons to whom the Software is furnished to do so, subject to
   the following conditions:
- 
+
   The above copyright notice and this permission notice shall be
   included in all copies or substantial portions of the Software.
- 
+
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -187,7 +187,7 @@ int sandbox_open(const char* path, struct fuse_file_info* fi)
   } else {
     CHECK_READ(path);
   }
-  
+
   int fd = open(path, fi->flags);
   if (-1 == fd) {
     return -errno;
@@ -294,7 +294,7 @@ int sandbox_readdir(const char* path, void* buf, fuse_fill_dir_t filler,
   }
 
   closedir(dir);
-  return 0;  
+  return 0;
 }
 
 int sandbox_setxattr(const char* path, const char* name, const char* value,
@@ -305,7 +305,7 @@ int sandbox_setxattr(const char* path, const char* name, const char* value,
 }
 
 int sandbox_getxattr(const char* path, const char* name, char* value,
-		     size_t size) 
+		     size_t size)
 {
   CHECK_READ(path);
   return PROXY(lgetxattr(path, name, value, size));
