@@ -1,3 +1,6 @@
+SRCDIR=$(dir $(MAKEFILE_LIST))
+VPATH=$(SRCDIR)
+
 OBJECTS=main.o run.o shared.o fuse_sandbox.o path.o
 TARGET=sandbox
 
@@ -27,4 +30,4 @@ distclean: clean
 	rm -f $(TARGET)
 
 dist:
-	git archive --prefix=sandbox-$$(<VERSION)/ -o sandbox-$$(<VERSION).tar.gz HEAD
+	git archive --remote=$(SRCDIR) --prefix=sandbox-$$(<VERSION)/ -o sandbox-$$(<VERSION).tar.gz HEAD
