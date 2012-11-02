@@ -3,6 +3,6 @@
 
 #include "shared.h"
 
-int run(const struct Context*);
+int run(const Context*);
 
 #endif

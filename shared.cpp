@@ -3,9 +3,11 @@
 
 #include "shared.h"
 
+int Global::debug_mode = 0;
+
 void debug(const char* format, ...)
 {
-  if (!global.debug_mode) {
+  if (!Global::debug_mode) {
     return;
   }
   

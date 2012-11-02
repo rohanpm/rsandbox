@@ -13,10 +13,6 @@
 #include "shared.h"
 #include "run.h"
 
-struct Global global = {
-  .debug_mode = 0
-};
-
 #define OPTION_NOT  (1<<16)
 #define OPTION_FS_ALLOW 0x101
 static const char optionstring[] = "+hd";
@@ -119,7 +115,7 @@ void parse_fs_allow(Context* ctx, const char* arg)
   ctx->fuse_writable_paths.push_back(realpath(current_arg));
 }
 
-void parse_arguments(struct Context* ctx, int argc, char** argv)
+void parse_arguments(Context* ctx, int argc, char** argv)
 {
   int gotopt;
   while ((gotopt = getopt_long(argc, argv,
@@ -143,7 +139,7 @@ void parse_arguments(struct Context* ctx, int argc, char** argv)
       usage(stderr, 3);
 
     case 'd':
-      ++global.debug_mode;
+      ++Global::debug_mode;
       break;
 
     case 'N':
@@ -216,7 +212,7 @@ void remove_mountpoint()
   }
 }
 
-void setup_fuse_context(struct Context* ctx)
+void setup_fuse_context(Context* ctx)
 {
   const char* tempdir = getenv("TMPDIR");
   if (!tempdir) {
@@ -238,7 +234,7 @@ void setup_fuse_context(struct Context* ctx)
 
 int main(int argc, char** argv)
 {
-  struct Context ctx = {
+  Context ctx = {
     .netns = 1,
     .pidns = 1,
     .mountns = 1,

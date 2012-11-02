@@ -3,6 +3,6 @@
 
 struct Context;
 
-int start_fuse_sandbox(const struct Context*);
+int start_fuse_sandbox(const Context*);
 
 #endif

@@ -61,7 +61,7 @@ int remount(const char* type)
 
 int exec_child(void* arg)
 {
-  const struct Context* ctx = (const struct Context*)arg;
+  const Context* ctx = reinterpret_cast<const Context*>(arg);
 
   /* FIXME: don't hardcode the proc and devtmpfs stuff */
   if (ctx->fs) {
@@ -128,7 +128,7 @@ int test_clone_real(int flags, const char* flagstr, const char* kernel_config)
   return 0;
 }
 
-int run(const struct Context* ctx)
+int run(const Context* ctx)
 {
   int status;
   if (ctx->clone_for_fuse) {
@@ -161,7 +161,7 @@ int run(const struct Context* ctx)
 
 int run_children(void* arg)
 {
-  const struct Context* ctx = (const struct Context*)arg;
+  const Context* ctx = reinterpret_cast<const struct Context*>(arg);
   int clone_flags = SIGCHLD;
   if (ctx->netns) {
     if (test_clone(CLONE_NEWNET, "CONFIG_NET_NS")) {

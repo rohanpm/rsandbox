@@ -329,7 +329,7 @@ void* sandbox_init(struct fuse_conn_info* conn)
   return 0;
 }
 
-int start_fuse_sandbox(const struct Context* ctx)
+int start_fuse_sandbox(const Context* ctx)
 {
   int statusfd[2];
   if (-1 == pipe(statusfd)) {
@@ -379,7 +379,7 @@ int start_fuse_sandbox(const struct Context* ctx)
     "sandbox",
     ctx->fuse_mountpoint.c_str(),
     "-o", "direct_io",
-    global.debug_mode > 1 ? "-d" : "-f",
+    Global::debug_mode > 1 ? "-d" : "-f",
     0
   };
   int argc = sizeof(argv)/sizeof(argv[0]) - 1;

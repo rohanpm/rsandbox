@@ -5,9 +5,8 @@
 #include <list>
 
 struct Global {
-  int debug_mode;
+  static int debug_mode;
 };
-extern struct Global global;
 
 struct Context {
   unsigned netns :1;
