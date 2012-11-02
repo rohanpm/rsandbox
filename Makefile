@@ -4,6 +4,8 @@ VPATH=$(SRCDIR)
 OBJECTS=main.o run.o shared.o fuse_sandbox.o path.o
 TARGET=sandbox
 
+VERSION=$(shell cat $(SRCDIR)/VERSION)
+
 BASE_CXXFLAGS=`pkg-config --cflags fuse` -g -std=c++11
 override CXXFLAGS:=$(BASE_CXXFLAGS) $(CXXFLAGS)
 
@@ -30,4 +32,4 @@ distclean: clean
 	rm -f $(TARGET)
 
 dist:
-	git archive --remote=$(SRCDIR) --prefix=sandbox-$$(<VERSION)/ -o sandbox-$$(<VERSION).tar.gz HEAD
+	git archive --remote=$(SRCDIR) --prefix=sandbox-$(VERSION)/ --format=tar HEAD | gzip > sandbox-$(VERSION).tar.gz
