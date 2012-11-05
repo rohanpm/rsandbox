@@ -1,0 +1,29 @@
+rsandbox(1)
+===========
+Rohan McGovern <rohan@mcgovern.id.au>
+:doctype: manpage
+:man source:   rsandbox
+:man version:  {revnumber}
+:man manual:   User Commands
+
+NAME
+----
+rsandbox - run a command inside of a sandbox
+
+SYNOPSIS
+--------
+  
+  rsandbox [options] -- command [args ...]
+
+Runs the given command inside of a sandbox.
+Various aspects of the system are isolated and cannot be modified by any
+processes within the sandbox.
+
+OPTIONS
+-------
+
+something...
+
+AUTHOR
+------
+Rohan McGovern <rohan@mcgovern.id.au>
