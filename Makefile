@@ -27,6 +27,9 @@ setcaps: $(TARGET)
 	@echo Root password is required to set capabilities
 	su -c "setcap cap_sys_admin,cap_sys_chroot+pe $(TARGET)"
 
+rsandbox.1: README.asciidoc
+	a2x -d manpage -f manpage $(SRCDIR)/README.asciidoc
+
 clean:
 	rm -f $(OBJECTS)
 

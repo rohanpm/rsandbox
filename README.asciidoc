@@ -1,0 +1,119 @@
+= rsandbox(1) =
+:doctype: manpage
+:man source:   rsandbox
+:man version:  {revnumber}
+:man manual:   User Commands
+
+== NAME ==
+
+rsandbox - run a command inside of a sandbox
+
+
+== SYNOPSIS ==
+  
+  rsandbox [options] -- command [args ...]
+
+Runs the given command inside of a sandbox.
+Various aspects of the system are protected from any modification by processes
+within the sandbox.
+
+== DESCRIPTION ==
+
+The sandbox supports a few distinct features, most of which may be enabled
+independently of each other. By default, all features are enabled.
+
+=== network ===
+
+Processes within the sandbox can't use any network devices (including loopback)
+and can't connect to unix domain sockets. Notably, this generally prevents
+connection to any local X server.  (implemented *CLONE_NEWNET*)
+
+=== PID ===
+
+Processes within the sandbox can't send signals, ptrace, or perform similar
+actions on any processes outside of the sandbox. Within the sandbox, the initial
+process receives a PID of 1. (implemented *CLONE_NEWPID*)
+
+=== IPC ===
+
+Processes within the sandbox can't manipulate any System V IPC resources outside
+of the sandbox (shared memory, semaphores etc).  (implemented by *CLONE_NEWIPC*)
+
+=== mounts ===
+
+Processes within the sandbox can't modify the set of mounted filesystems outside
+of the sandbox. It may be possible to mount or unmount filesystems inside of the
+sandbox. (implemented by *CLONE_NEWNS*)
+
+=== filesystem ===
+
+Processes within the sandbox can't write to the filesystem, outside of a set of
+explicitly allowed paths (an empty set by default). (implemented by *FUSE* -
+Filesystem in Userspace)
+
+== OPTIONS ==
+
+*--help, -h*
+  Show terse usage information.
+
+*--debug, -d*
+  Enable debugging messages.
+  May be provided multiple times for more debugging; if provided at least
+  twice, and the filesystem sandbox is enabled, debug messages are enabled in
+  the FUSE process. This is quite verbose.
+
+=== SANDBOX FEATURE OPTIONS ===
+
+All of the following sandbox features are enabled by default.
+*--no-<feature>* disables a feature.
+
+*--none*::
+  Disable all sandbox features.
+  May be followed by additional options to turn on selected features.
+
+*--net, --no-net*::
+  Toggles network sandboxing.
+
+*--pid, --no-pid*::
+  Toggles PID sandboxing.
+
+*--mount, --no-mount*::
+  Toggles mount sandboxing.
+
+*--ipc, --no-ipc*::
+  Toggles SysV IPC sandboxing.
+
+*--fs, --no-fs*::
+  Toggles filesystem sandboxing.
+
+=== FILESYSTEM OPTIONS ===
+
+*--fs-allow* 'PATH' [ *--fs-allow* 'PATH2' ... ]::
+  Allow writes to the specified path(s).
+  'PATH' may contain a single relative or absolute path, or several paths
+  separated with the : character.
+  Currently, only directories may be specified. Writes are permitted
+  under the named directory tree.
+
+== EXAMPLES ==
+
+Compiling some software package, allowing the process only to write to the build
+tree (current directory) and temporary directory:
+
+  rsandbox --fs-allow $PWD:/tmp -- make
+
+Minimum options required for an X11 application (IPC sandboxing must be disabled
+for MIT-SHM):
+
+  rsandbox --no-net --no-ipc -- my-x11-app
+
+
+== SEE ALSO ==
+
+* *unshare(1)* - simpler subset of rsandbox's functionality
+* *lxc(7)*, *lxc-execute(1)* - highly configurable Linux containers
+* *sandbox(8)* - similar utility implemented via SELinux, more fine-grained control
+
+== AUTHOR ==
+
+Rohan McGovern <rohan@mcgovern.id.au>
