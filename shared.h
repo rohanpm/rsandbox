@@ -27,6 +27,8 @@
 #include <string>
 #include <list>
 
+#define APPNAME "rsandbox"
+
 struct Global {
   static int debug_mode;
 };

@@ -60,7 +60,7 @@ static const struct option options[] = {
 void usage(FILE* stream, int exitcode)
 {
   fprintf(stream,
-"Usage: sandbox [options] [--] command [args]\n\n"
+"Usage: rsandbox [options] [--] command [args]\n\n"
 "Run a command in a sandbox.\n\n"
 "Options:\n"
 "  --help, -h        Show this message\n"
@@ -209,7 +209,7 @@ void parse_arguments(Context* ctx, int argc, char** argv)
 
   if (ctx->fs && !ctx->mountns) {
     fprintf(stderr, "error: filesystem sandbox requires mount sandbox.\n"
-	    "Try adding --mount to the sandbox arguments.\n");
+	    "Try adding --mount to the rsandbox arguments.\n");
     exit(3);
   }
 
@@ -229,7 +229,7 @@ void remove_mountpoint()
 {
   if (rmdir(mountpoint)) {
     if (errno != ENOENT) {
-      fprintf(stderr, "warning: could not remove sandbox fuse mount point %s: "
+      fprintf(stderr, "warning: could not remove rsandbox fuse mount point %s: "
 	      "%s\n", mountpoint, strerror(errno));
     }
   }
@@ -243,7 +243,7 @@ void setup_fuse_context(Context* ctx)
   }
 
   std::string tmpl(tempdir);
-  tmpl += "/sandbox-fuse-XXXXXX";
+  tmpl += "/rsandbox-fuse-XXXXXX";
   char* c_mountpoint = strdup(tmpl.c_str());
 
   if (!mkdtemp(c_mountpoint)) {

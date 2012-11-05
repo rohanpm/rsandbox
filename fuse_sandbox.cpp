@@ -388,7 +388,7 @@ int start_fuse_sandbox(const Context* ctx)
 
   close(statusfd[0]);
 
-  prctl(PR_SET_NAME, "sandbox [fuse]");
+  prctl(PR_SET_NAME, APPNAME " [fuse]");
 
   mountpoint.set(ctx->fuse_mountpoint);
 
@@ -399,7 +399,7 @@ int start_fuse_sandbox(const Context* ctx)
   }
 
   const char* argv[] = {
-    "sandbox",
+    APPNAME,
     ctx->fuse_mountpoint.c_str(),
     "-o", "direct_io",
     Global::debug_mode > 1 ? "-d" : "-f",

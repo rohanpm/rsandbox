@@ -2,7 +2,7 @@ SRCDIR=$(dir $(MAKEFILE_LIST))
 VPATH=$(SRCDIR)
 
 OBJECTS=main.o run.o shared.o fuse_sandbox.o path.o
-TARGET=sandbox
+TARGET=rsandbox
 
 VERSION=$(shell cat $(SRCDIR)/VERSION)
 

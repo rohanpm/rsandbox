@@ -133,7 +133,7 @@ int test_clone_real(int flags, const char* flagstr, const char* kernel_config)
   if (pid == -1) {
     if (errno == EPERM) {
       fprintf(stderr, "error: permission denied for clone() with %s.\n"
-	      "sandbox should have CAP_SYS_ADMIN capability set.\n", flagstr);
+	      "rsandbox should have CAP_SYS_ADMIN capability set.\n", flagstr);
     } else if (errno == EINVAL) {
       fprintf(stderr, "error: your kernel does not support clone() with %s.\n"
 	      "%s%s%s",
@@ -260,7 +260,7 @@ int run_children(void* arg)
   }
 
   if (fuse_status) {
-    fprintf(stderr, "sandbox: warning: fuse process exited with status 0x%x\n",
+    fprintf(stderr, "rsandbox: warning: fuse process exited with status 0x%x\n",
 	    fuse_status);
   }
 
