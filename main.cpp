@@ -257,13 +257,13 @@ void setup_fuse_context(Context* ctx)
 
 int main(int argc, char** argv)
 {
-  Context ctx = {
-    .netns = 1,
-    .pidns = 1,
-    .mountns = 1,
-    .ipcns = 1,
-    .fs = 1
-  };
+  Context ctx;
+  ctx.netns = 1;
+  ctx.pidns = 1;
+  ctx.mountns = 1;
+  ctx.ipcns = 1;
+  ctx.fs = 1;
+
   parse_arguments(&ctx, argc, argv);
   if (ctx.fs) {
     setup_fuse_context(&ctx);
