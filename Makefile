@@ -17,7 +17,7 @@ TARGET=rsandbox
 VERSION=$(shell cat $(SRCDIR)/VERSION)
 
 FUSE_CXXFLAGS=$(shell pkg-config --cflags fuse)
-BASE_CXXFLAGS=$(FUSE_CXXFLAGS) -g -std=c++11
+BASE_CXXFLAGS=$(FUSE_CXXFLAGS) -g -std=c++0x
 override CXXFLAGS:=$(BASE_CXXFLAGS) $(CXXFLAGS)
 
 FUSE_LDLIBS=$(shell pkg-config --libs fuse)
