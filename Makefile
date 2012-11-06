@@ -54,4 +54,4 @@ distclean: clean
 	rm -f $(TARGET)
 
 dist:
-	git archive --remote=$(SRCDIR) --prefix=sandbox-$(VERSION)/ --format=tar HEAD | gzip > sandbox-$(VERSION).tar.gz
+	git archive --remote=$(SRCDIR) --prefix=rsandbox-$(VERSION)/ --format=tar HEAD | gzip > rsandbox-$(VERSION).tar.gz
