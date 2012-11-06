@@ -1,3 +1,13 @@
+prefix=/usr/local
+exec_prefix=$(prefix)
+bindir=$(exec_prefix)/bin
+datarootdir=$(prefix)/share
+mandir=$(datarootdir)/man
+man1dir=$(mandir)/man1
+INSTALL=install
+INSTALL_PROGRAM=$(INSTALL) -D
+INSTALL_DATA=$(INSTALL) -D -m 644
+
 SRCDIR=$(dir $(MAKEFILE_LIST))
 VPATH=$(SRCDIR)
 
@@ -27,8 +37,16 @@ setcaps: $(TARGET)
 	@echo Root password is required to set capabilities
 	su -c "setcap cap_sys_admin,cap_sys_chroot+pe $(TARGET)"
 
-rsandbox.1: README.asciidoc
-	a2x -d manpage -f manpage $(SRCDIR)/README.asciidoc
+$(TARGET).1: README.asciidoc
+	a2x -d manpage -f manpage -D . $(SRCDIR)/README.asciidoc
+
+install: install-target install-man
+
+install-target: $(TARGET)
+	$(INSTALL_PROGRAM) $(TARGET) $(DESTDIR)$(bindir)/$(TARGET)
+
+install-man: $(TARGET).1
+	$(INSTALL_DATA) $(TARGET).1 $(DESTDIR)$(man1dir)/$(TARGET).1
 
 clean:
 	rm -f $(OBJECTS)
