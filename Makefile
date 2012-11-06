@@ -20,9 +20,8 @@ FUSE_CXXFLAGS=$(shell pkg-config --cflags fuse)
 BASE_CXXFLAGS=$(FUSE_CXXFLAGS) -g -std=c++11
 override CXXFLAGS:=$(BASE_CXXFLAGS) $(CXXFLAGS)
 
-FUSE_LDFLAGS=$(shell pkg-config --libs fuse)
-BASE_LDFLAGS=$(FUSE_LDFLAGS)
-override LDFLAGS:=$(BASE_LDFLAGS) $(LDFLAGS)
+FUSE_LDLIBS=$(shell pkg-config --libs fuse)
+override LDLIBS:=$(FUSE_LDLIBS) $(LDLIBS)
 
 $(TARGET): $(OBJECTS)
 	$(CXX) -o$(TARGET) $(LDFLAGS) $(OBJECTS) $(LOADLIBES) $(LDLIBS)
