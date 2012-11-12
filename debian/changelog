@@ -1,3 +1,9 @@
+rsandbox (0.81) UNRELEASED; urgency=low
+
+  * Fixed build/install problems on Ubuntu
+
+ -- Rohan McGovern <rohan@mcgovern.id.au>  Sun, 11 Nov 2012 22:05:30 -0500
+
 rsandbox (0.80-1) UNRELEASED; urgency=low
 
   * Initial release

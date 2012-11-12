@@ -1,6 +1,6 @@
 Name:           rsandbox
 Version:        git
-Release:        0.80
+Release:        0.81
 License:        MIT
 Summary:        Lightweight sandbox utility
 Url:            https://github.com/rohanpm/rsandbox
