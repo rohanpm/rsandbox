@@ -2,3 +2,7 @@
 *~
 rsandbox
 rsandbox.1
+.pc/
+debian/files
+debian/patches/
+debian/rsandbox.*

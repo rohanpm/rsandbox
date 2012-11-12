@@ -1,0 +1,7 @@
+#!/bin/sh
+#DEBHELPER#
+set -e
+CAPS=cap_sys_admin,cap_sys_chroot
+BIN=/usr/bin/rsandbox
+echo -n "Granting $CAPS to $BIN ... "
+setcap ${CAPS}+pe $BIN

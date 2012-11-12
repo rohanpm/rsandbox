@@ -1,0 +1,16 @@
+Source: rsandbox
+Section: utils
+Priority: extra
+Maintainer: Rohan McGovern <rohan@mcgovern.id.au>
+Build-Depends: debhelper (>= 8.0.0), libfuse-dev, pkg-config, asciidoc
+Standards-Version: 4.9.2
+Homepage: https://github.com/rohanpm/rsandbox
+#Vcs-Git: git://git.debian.org/collab-maint/rsandbox.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/rsandbox.git;a=summary
+
+Package: rsandbox
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libcap2-bin
+Description: Utility for sandboxing programs.
+ May be used to prevent a program from accessing network, filesystem,
+ IPC or other resources.
