@@ -37,7 +37,7 @@ setcaps: $(TARGET)
 	su -c "setcap cap_sys_admin,cap_sys_chroot+pe $(TARGET)"
 
 $(TARGET).1: README.asciidoc
-	a2x -vv --no-xmllint -d manpage -f manpage -D . $(SRCDIR)/README.asciidoc
+	a2x -vv --no-xmllint --xsltproc-opts=--nonet -d manpage -f manpage -D . $(SRCDIR)/README.asciidoc
 
 install: install-target install-man
 
