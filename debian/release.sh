@@ -16,9 +16,6 @@ if [ "x$SHA" = "x" ]; then
 fi
 
 for dist in \
-    lucid \
-    maverick \
-    natty \
     oneiric \
     precise \
     quantal \
