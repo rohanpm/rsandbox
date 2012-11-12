@@ -51,7 +51,7 @@ clean:
 	rm -f $(OBJECTS)
 
 distclean: clean
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(TARGET).1
 
 dist:
 	git archive --remote=$(SRCDIR) --prefix=rsandbox-$(VERSION)/ --format=tar HEAD | gzip > rsandbox-$(VERSION).tar.gz
