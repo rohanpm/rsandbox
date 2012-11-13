@@ -107,6 +107,21 @@ for MIT-SHM):
   rsandbox --no-net --no-ipc -- my-x11-app
 
 ifndef::manname[]
+== BUILDING ==
+
+To build and install rsandbox, run `make' and `make install' from the top-level source
+directory, or from any directory using the -f option to specify the path to the rsandbox
+makefile.
+
+Building from source requires g\++ with reasonable C++11 support, FUSE development headers,
+and pkg-config.
+
+Note that some capabilities must be enabled on the rsandbox binary for full functionality;
+these are not set by default in the installation process, since it requires root
+permission.
+
+Run `make help' for more information on building and installing from source.
+
 == PACKAGES ==
 
 Prebuilt packages for some popular Linux variants are available from the following

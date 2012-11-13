@@ -11,6 +11,7 @@ INSTALL_DATA=$(INSTALL) -D -m 644
 SRCDIR=$(dir $(MAKEFILE_LIST))
 VPATH=$(SRCDIR)
 
+CAPS=cap_sys_admin,cap_sys_chroot
 OBJECTS=main.o run.o shared.o fuse_sandbox.o path.o
 TARGET=rsandbox
 
@@ -34,7 +35,7 @@ path.o: path.cpp path.h
 
 setcaps: $(TARGET)
 	@echo Root password is required to set capabilities
-	su -c "setcap cap_sys_admin,cap_sys_chroot+pe $(TARGET)"
+	su -c "setcap $(CAPS)+pe $(TARGET)"
 
 $(TARGET).1: README.asciidoc
 	a2x -vv --no-xmllint --xsltproc-opts=--nonet -d manpage -f manpage -D . $(SRCDIR)/README.asciidoc
@@ -55,3 +56,20 @@ distclean: clean
 
 dist:
 	git archive --remote=$(SRCDIR) --prefix=rsandbox-$(VERSION)/ --format=tar HEAD | gzip > rsandbox-$(VERSION).tar.gz
+
+help:
+	@echo "Makefile for rsandbox"
+	@echo ""
+	@echo "Supported targets: (default: rsandbox)"
+	@echo ""
+	@echo "  rsandbox        Compile. Requires g++, FUSE headers, pkg-config."
+	@echo "                  Compile flags may be set by CXXFLAGS."
+	@echo "                  Link flags may be set by LDLIBS."
+	@echo "  rsandbox.1      Generate man page. Requires asciidoc."
+	@echo "  setcaps         Set the needed capabilities on rsandbox ($(CAPS));"
+	@echo "                  requires root permission and the 'setcap' command."
+	@echo "  dist            Create source tarball from git repository."
+	@echo "  install         Install into \$$(DESTDIR)\$$(prefix) (default: $(prefix))"
+	@echo "  clean           Remove intermediate build artifacts."
+	@echo "  distclean       Remove all build artifacts."
+	@echo ""
