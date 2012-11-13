@@ -144,6 +144,9 @@ endif::manname[]
 
 == CAVEATS ==
 
+The sandbox can be escaped if superuser privileges are obtained by a process in the
+sandbox.
+
 This is considered alpha-quality software and may contain some bugs or design issues.
 The command-line interface is subject to change.
 
