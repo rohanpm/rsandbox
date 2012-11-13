@@ -103,6 +103,9 @@ int exec_child(void* arg)
     if (remount("devtmpfs")) {
       return 255;
     }
+    if (remount("devpts")) {
+      return 255;
+    }
   }
 
   if (ctx->mount_proc) {
