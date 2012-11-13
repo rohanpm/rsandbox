@@ -107,6 +107,10 @@ tree (current directory) and temporary directory:
 
   rsandbox --fs-allow $PWD:/tmp -- make
 
+Start a sandboxed interactive shell, with a modified prompt:
+
+  rsandbox env PS1="[sandbox] $PS1" $SHELL
+
 Minimum options required for an X11 application (IPC sandboxing must be disabled
 for MIT-SHM):
 
