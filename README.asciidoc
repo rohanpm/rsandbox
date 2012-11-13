@@ -50,6 +50,12 @@ Processes within the sandbox can't write to the filesystem, outside of a set of
 explicitly allowed paths (an empty set by default). (implemented by *FUSE* -
 Filesystem in Userspace)
 
+Certain types of filesystems are remounted inside of the sandbox to ensure the
+system behaves as expected:
+
+* procfs - ensure only processes within the sandbox appear under /proc
+* devtmpfs, devpts - ensure devices can be accessed as expected
+
 == OPTIONS ==
 
 *--help, -h*
