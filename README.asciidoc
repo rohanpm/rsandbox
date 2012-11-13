@@ -25,13 +25,13 @@ independently of each other. By default, all features are enabled.
 
 Processes within the sandbox can't use any network devices (including loopback)
 and can't connect to unix domain sockets. Notably, this generally prevents
-connection to any local X server.  (implemented *CLONE_NEWNET*)
+connection to any local X server.  (implemented by *CLONE_NEWNET*)
 
 === PID ===
 
 Processes within the sandbox can't send signals, ptrace, or perform similar
 actions on any processes outside of the sandbox. Within the sandbox, the initial
-process receives a PID of 1. (implemented *CLONE_NEWPID*)
+process receives a PID of 1. (implemented by *CLONE_NEWPID*)
 
 === IPC ===
 
