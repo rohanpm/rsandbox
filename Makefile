@@ -49,10 +49,10 @@ install-man: $(TARGET).1
 	$(INSTALL_DATA) $(TARGET).1 $(DESTDIR)$(man1dir)/$(TARGET).1
 
 clean:
-	rm -f $(OBJECTS)
+	rm -f $(OBJECTS) README.xml
 
 distclean: clean
-	rm -f $(TARGET) $(TARGET).1
+	rm -f $(TARGET) $(TARGET).1 rsandbox-$(VERSION).tar.gz
 
 dist:
 	git archive --remote=$(SRCDIR) --prefix=rsandbox-$(VERSION)/ --format=tar HEAD | gzip > rsandbox-$(VERSION).tar.gz
