@@ -1,5 +1,4 @@
 = rsandbox(1) =
-:doctype: manpage
 :man source:   rsandbox
 :man version:  {revnumber}
 :man manual:   User Commands
@@ -107,6 +106,23 @@ for MIT-SHM):
 
   rsandbox --no-net --no-ipc -- my-x11-app
 
+ifndef::manname[]
+== PACKAGES ==
+
+Prebuilt packages for some popular Linux variants are available from the following
+locations:
+
+* Ubuntu: https://launchpad.net/~rohanpm/+archive/rsandbox
+* Fedora, OpenSuSE: https://build.opensuse.org/project/repositories?project=home%3Arohanpm%3Arsandbox
+
+endif::manname[]
+
+== CAVEATS ==
+
+This is considered alpha-quality software and may contain some bugs or design issues.
+The command-line interface is subject to change.
+
+Please report bugs at https://github.com/rohanpm/rsandbox/issues .
 
 == SEE ALSO ==
 
