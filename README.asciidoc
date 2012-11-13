@@ -21,30 +21,32 @@ within the sandbox.
 The sandbox supports a few distinct features, most of which may be enabled
 independently of each other. By default, all features are enabled.
 
-=== network ===
+=== WHAT IS SANDBOXED ===
+
+==== network ====
 
 Processes within the sandbox can't use any network devices (including loopback)
 and can't connect to unix domain sockets. Notably, this generally prevents
 connection to any local X server.  (implemented by *CLONE_NEWNET*)
 
-=== PID ===
+==== PID ====
 
 Processes within the sandbox can't send signals, ptrace, or perform similar
 actions on any processes outside of the sandbox. Within the sandbox, the initial
 process receives a PID of 1. (implemented by *CLONE_NEWPID*)
 
-=== IPC ===
+==== IPC ====
 
 Processes within the sandbox can't manipulate any System V IPC resources outside
 of the sandbox (shared memory, semaphores etc).  (implemented by *CLONE_NEWIPC*)
 
-=== mounts ===
+==== mounts ====
 
 Processes within the sandbox can't modify the set of mounted filesystems outside
 of the sandbox. It may be possible to mount or unmount filesystems inside of the
 sandbox. (implemented by *CLONE_NEWNS*)
 
-=== filesystem ===
+==== filesystem ====
 
 Processes within the sandbox can't write to the filesystem, outside of a set of
 explicitly allowed paths (an empty set by default). (implemented by *FUSE* -
@@ -55,6 +57,32 @@ system behaves as expected:
 
 * procfs - ensure only processes within the sandbox appear under /proc
 * devtmpfs, devpts - ensure devices can be accessed as expected
+
+=== WHAT IS NOT SANDBOXED ===
+
+Some of these may be construed as features yet to be implemented.
+
+==== devices ====
+
+There are no particular access restrictions on `/dev`; if
+`dd if=/dev/zero of=/dev/sda` is possible on the system outside of the sandbox,
+it will also be possible inside of the sandbox.
+
+Could be implemented via http://www.kernel.org/doc/Documentation/cgroups/devices.txt.
+
+==== memory ====
+
+Nothing prevents the processes within the sandbox from allocating enough memory
+to cause thrashing or OOM conditions.
+
+Could be implemented via http://www.kernel.org/doc/Documentation/cgroups/memory.txt
+
+==== CPU, I/O ====
+
+Nothing prevents the processes within the sandbox from spinning all CPUs at
+100% or saturating I/O buses.  However, the venerable `nice` and `ionice`
+commands may be combined with rsandbox to help ensure the system outside of the
+sandbox remains usable.
 
 == OPTIONS ==
 
